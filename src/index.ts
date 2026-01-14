@@ -8,6 +8,7 @@ import authRoutes from './routes/auth'
 import articleRoutes from './routes/articles'
 import githubRoutes from './routes/github'
 import settingsRoutes from './routes/settings'
+import projectRoutes from './routes/projects'
 
 dotenv.config()
 
@@ -43,6 +44,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/articles', articleRoutes)
 app.use('/api/github', githubRoutes)
 app.use('/api/settings', settingsRoutes)
+app.use('/api/projects', projectRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {
