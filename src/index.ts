@@ -14,7 +14,7 @@ dotenv.config()
 
 const app = express()
 app.set("trust proxy", 1);
-const PORT = process.env.PORT || 5000
+const PORT = parseInt(process.env.PORT || '5000')
 
 // Connect to MongoDB (non-blocking)
 connectDB().catch(err => {
@@ -23,10 +23,29 @@ connectDB().catch(err => {
 
 // Security middleware
 app.use(helmet())
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
-}))
+
+// Configure CORS to accept both development and production origins
+const corsOptions = {
+  credentials: true,
+};
+
+// Determine allowed origins for CORS
+let allowedOrigins: string[] | string = ['http://localhost:3000']; // default for development
+
+if (process.env.CORS_ORIGINS) {
+  // Split multiple origins if provided
+  allowedOrigins = process.env.CORS_ORIGINS.split(',').map((origin: string) => origin.trim());
+} else if (process.env.FRONTEND_URL) {
+  // Use FRONTEND_URL if CORS_ORIGINS is not set
+  allowedOrigins = [process.env.FRONTEND_URL];
+} else if (process.env.FRONTEND_URL_DEV && process.env.FRONTEND_URL_PROD) {
+  // Use both DEV and PROD URLs if available
+  allowedOrigins = [process.env.FRONTEND_URL_DEV, process.env.FRONTEND_URL_PROD];
+}
+
+corsOptions.origin = allowedOrigins;
+
+app.use(cors(corsOptions))
 
 // Rate limiting
 const limiter = rateLimit({
@@ -76,6 +95,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📡 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:8080'}`);
+  console.log(`📡 CORS Origins: ${process.env.CORS_ORIGINS || 'Not configured'}`);
   
   // Check database connection status after startup
   setTimeout(() => {
