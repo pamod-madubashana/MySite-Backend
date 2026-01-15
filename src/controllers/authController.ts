@@ -40,11 +40,12 @@ export const register = [
       }
 
       // Create new user
+      const adminEmail = process.env.ADMIN_EMAIL;
       const user = new User({
         username,
         email,
         password,
-        role: 'admin' // First user is admin
+        role: email === adminEmail ? 'admin' : 'user'
       })
 
       await user.save()
