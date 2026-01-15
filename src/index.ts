@@ -24,11 +24,6 @@ connectDB().catch(err => {
 // Security middleware
 app.use(helmet())
 
-// Configure CORS to accept both development and production origins
-const corsOptions = {
-  credentials: true,
-};
-
 // Determine allowed origins for CORS
 let allowedOrigins: string[] | string = ['http://localhost:3000']; // default for development
 
@@ -43,7 +38,11 @@ if (process.env.CORS_ORIGINS) {
   allowedOrigins = [process.env.FRONTEND_URL_DEV, process.env.FRONTEND_URL_PROD];
 }
 
-corsOptions.origin = allowedOrigins;
+// Configure CORS to accept both development and production origins
+const corsOptions: cors.CorsOptions = {
+  origin: allowedOrigins,
+  credentials: true,
+};
 
 app.use(cors(corsOptions))
 
