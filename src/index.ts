@@ -24,23 +24,49 @@ connectDB().catch(err => {
 // Security middleware
 app.use(helmet())
 
-// Determine allowed origins for CORS
-let allowedOrigins: string[] | string = ['http://localhost:3000']; // default for development
+// Determine allowed origins for CORS based on environment
+const determineAllowedOrigins = (): string[] => {
+  // Check for NODE_ENV to determine environment
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  if (process.env.CORS_ORIGINS) {
+    // Split multiple origins if provided
+    return process.env.CORS_ORIGINS.split(',').map((origin: string) => origin.trim());
+  } else if (isProduction && process.env.FRONTEND_URL_PROD) {
+    // Production environment
+    return [process.env.FRONTEND_URL_PROD];
+  } else if (!isProduction && process.env.FRONTEND_URL_DEV) {
+    // Development environment
+    return [process.env.FRONTEND_URL_DEV];
+  } else if (process.env.FRONTEND_URL) {
+    // Fallback to general FRONTEND_URL
+    return [process.env.FRONTEND_URL];
+  } else {
+    // Default fallback
+    return ['http://localhost:3000', 'http://localhost:8080'];
+  }
+};
 
-if (process.env.CORS_ORIGINS) {
-  // Split multiple origins if provided
-  allowedOrigins = process.env.CORS_ORIGINS.split(',').map((origin: string) => origin.trim());
-} else if (process.env.FRONTEND_URL) {
-  // Use FRONTEND_URL if CORS_ORIGINS is not set
-  allowedOrigins = [process.env.FRONTEND_URL];
-} else if (process.env.FRONTEND_URL_DEV && process.env.FRONTEND_URL_PROD) {
-  // Use both DEV and PROD URLs if available
-  allowedOrigins = [process.env.FRONTEND_URL_DEV, process.env.FRONTEND_URL_PROD];
-}
+const allowedOrigins = determineAllowedOrigins();
+
+console.log('🔧 CORS Configuration:');
+console.log('   Environment:', process.env.NODE_ENV || 'development');
+console.log('   Allowed Origins:', allowedOrigins);
 
 // Configure CORS to accept both development and production origins
 const corsOptions: cors.CorsOptions = {
-  origin: allowedOrigins,
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin is in allowed list
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log(`⚠️  Blocked CORS request from origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 };
 
