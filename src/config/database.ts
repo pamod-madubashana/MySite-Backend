@@ -10,32 +10,45 @@ const connectDB = async () => {
       return;
     }
 
+    console.log('🔄 Attempting to connect to MongoDB...');
+    
     const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/portfolio', {
-      serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
-      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+      serverSelectionTimeoutMS: 10000, // Increased to 10 seconds for better reliability
+      socketTimeoutMS: 45000,
+      maxPoolSize: 10, // Maintain up to 10 socket connections
     });
     
     isConnected = true;
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-    console.log(`Database: ${conn.connection.name}`);
+    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
+    console.log(`📊 Database: ${conn.connection.name}`);
     
     // Handle connection events
     mongoose.connection.on('error', (err) => {
-      console.error('MongoDB connection error:', err);
+      console.error('❌ MongoDB connection error:', err);
       isConnected = false;
     });
     
     mongoose.connection.on('disconnected', () => {
-      console.log('MongoDB disconnected');
+      console.log('🔌 MongoDB disconnected');
       isConnected = false;
+      // Attempt to reconnect
+      setTimeout(connectDB, 5000);
+    });
+    
+    mongoose.connection.on('reconnected', () => {
+      console.log('🔁 MongoDB reconnected successfully');
+      isConnected = true;
     });
     
   } catch (error) {
-    console.error('Database connection error:', error);
+    console.error('❌ Database connection error:', error);
     console.log('⚠️  MongoDB connection failed - API will run without database persistence');
-    console.log('💡 Tip: Check your MongoDB Atlas cluster status or network connectivity');
+    console.log('💡 Retrying connection in 5 seconds...');
     // Don't exit - let the application continue without DB
     isConnected = false;
+    
+    // Retry connection after delay
+    setTimeout(connectDB, 5000);
   }
 };
 

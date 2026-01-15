@@ -16,9 +16,10 @@ const app = express()
 app.set("trust proxy", 1);
 const PORT = parseInt(process.env.PORT || '5000')
 
-// Connect to MongoDB (non-blocking)
+// Connect to MongoDB (non-blocking with retry)
 connectDB().catch(err => {
-  console.error('Failed to connect to database:', err);
+  console.error('❌ Initial database connection attempt failed:', err.message);
+  console.log('🔄 Automatic retry will be attempted by the connection handler');
 });
 
 // Security middleware
@@ -125,12 +126,13 @@ app.listen(PORT, () => {
   // Check database connection status after startup
   setTimeout(() => {
     if (isDatabaseConnected()) {
-      console.log('✅ Database connection established');
+      console.log('✅ Database connection successfully established');
     } else {
-      console.log('⚠️  Database connection failed - running in limited mode');
-      console.log('💡 Some features may not work without database connectivity');
+      console.log('⚠️  Database connection temporarily unavailable');
+      console.log('💡 Server running in limited mode - automatic reconnection attempts in progress');
+      console.log('📝 Note: This is normal behavior for cloud databases with variable connection times');
     }
-  }, 2000);
+  }, 3000);
 })
 
 export default app
