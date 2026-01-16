@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import Timeline from '../models/Timeline';
 import Interests from '../models/Interests';
 import TechSkill from '../models/TechSkills';
+import TechStackCategory from '../models/TechStackCategory';
 // Default timeline data
 const defaultTimelineData: Array<{
   year: string;
@@ -61,15 +62,47 @@ const defaultInterestsData: Array<{
 const defaultTechSkillsData: Array<{
   name: string;
   level: number;
-  category?: string;
   order: number;
 }> = [
-  { name: "Python", level: 95, category: "Backend", order: 1 },
-  { name: "JavaScript", level: 80, category: "Frontend", order: 2 },
-  { name: "React", level: 65, category: "Frontend", order: 3 },
-  { name: "TypeScript", level: 75, category: "Frontend", order: 4 },
-  { name: "MongoDB", level: 85, category: "Database", order: 5 },
-  { name: "AWS", level: 30, category: "DevOps", order: 6 }
+  { name: "Python", level: 95, order: 1 },
+  { name: "JavaScript", level: 80, order: 2 },
+  { name: "React", level: 65, order: 3 },
+  { name: "TypeScript", level: 75, order: 4 },
+  { name: "MongoDB", level: 85, order: 5 },
+  { name: "AWS", level: 30, order: 6 }
+];
+
+// Default tech stack categories data
+const defaultTechStackCategoriesData: Array<{
+  title: string;
+  icon: string;
+  skills: string[];
+  order: number;
+}> = [
+  {
+    title: "Frontend",
+    icon: "Code",
+    skills: ["React", "JavaScript", "TypeScript", "Tailwind CSS", "HTML", "CSS"],
+    order: 1
+  },
+  {
+    title: "Backend",
+    icon: "Server",
+    skills: ["Node.js", "Express", "Python", "Pyrogram", "aiohttp"],
+    order: 2
+  },
+  {
+    title: "Database",
+    icon: "Database",
+    skills: ["MongoDB", "MySQL", "Redis", "PostgreSQL"],
+    order: 3
+  },
+  {
+    title: "Cloud & DevOps",
+    icon: "Cloud",
+    skills: ["GitHub Actions", "Koyeb", "Vercel", "Docker (Basics)", "Git"],
+    order: 4
+  }
 ];
 
 export const seedDatabaseIfEmpty = async () => {
@@ -77,6 +110,7 @@ export const seedDatabaseIfEmpty = async () => {
     const timelineCount = await Timeline.countDocuments();
     const interestsCount = await Interests.countDocuments();
     const techSkillsCount = await TechSkill.countDocuments();
+    const techStackCategoriesCount = await TechStackCategory.countDocuments();
     
     if (timelineCount === 0) {
       console.log('Seeding timeline data...');
@@ -100,6 +134,14 @@ export const seedDatabaseIfEmpty = async () => {
       console.log('Tech skills data seeded successfully.');
     } else {
       console.log(`Tech skills collection already has ${techSkillsCount} records. Skipping seeding.`);
+    }
+    
+    if (techStackCategoriesCount === 0) {
+      console.log('Seeding tech stack categories data...');
+      await TechStackCategory.insertMany(defaultTechStackCategoriesData);
+      console.log('Tech stack categories data seeded successfully.');
+    } else {
+      console.log(`Tech stack categories collection already has ${techStackCategoriesCount} records. Skipping seeding.`);
     }
     
     console.log('Database seeding process completed.');

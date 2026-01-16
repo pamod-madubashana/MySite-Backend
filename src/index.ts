@@ -14,6 +14,7 @@ import enhancedDashboardRoutes from './routes/enhancedDashboard';
 import timelineRoutes from './routes/timeline';
 import techSkillsRoutes from './routes/techSkills';
 import interestsRoutes from './routes/interests';
+import techStackCategoryRoutes from './routes/techStackCategories';
 
 dotenv.config()
 
@@ -101,6 +102,7 @@ app.use('/api/dashboard/enhanced', enhancedDashboardRoutes);
 app.use('/api/timeline', timelineRoutes);
 app.use('/api/tech-skills', techSkillsRoutes);
 app.use('/api/interests', interestsRoutes);
+app.use('/api/tech-stack-categories', techStackCategoryRoutes);
 
 
 app.get("/", (req, res) => {
