@@ -10,11 +10,14 @@ import {
 
 const router = express.Router();
 
-// All tech skills routes require admin authentication
+// Public route for getting tech skills (no authentication required)
+router.get('/public', getAllTechSkills);
+
+// All admin tech skills routes require admin authentication
 router.use(authenticateToken);
 router.use(requireAdmin);
 
-// Get all tech skills
+// Get all tech skills (admin only)
 router.get('/', getAllTechSkills);
 
 // Get a specific tech skill

@@ -10,11 +10,14 @@ import {
 
 const router = express.Router();
 
-// All interests routes require admin authentication
+// Public route for getting interests (no authentication required)
+router.get('/public', getAllInterests);
+
+// All admin interests routes require admin authentication
 router.use(authenticateToken);
 router.use(requireAdmin);
 
-// Get all interests
+// Get all interests (admin only)
 router.get('/', getAllInterests);
 
 // Get a specific interest
