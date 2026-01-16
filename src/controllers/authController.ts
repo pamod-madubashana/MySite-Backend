@@ -12,7 +12,6 @@ export const register = [
   
   body('email')
     .isEmail()
-    .normalizeEmail()
     .withMessage('Valid email is required'),
   
   body('password')
@@ -41,6 +40,11 @@ export const register = [
 
       // Create new user
       const adminEmail = process.env.ADMIN_EMAIL;
+      
+      console.log('DEBUG: Incoming email (after validation):', email);
+      console.log('DEBUG: Admin email from env:', adminEmail);
+      console.log('DEBUG: Direct comparison result:', email === adminEmail);
+      
       const user = new User({
         username,
         email,
