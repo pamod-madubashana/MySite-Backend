@@ -15,7 +15,7 @@ exports.register = [
         .withMessage('Username can only contain letters, numbers, and underscores'),
     (0, express_validator_1.body)('email')
         .isEmail()
-        .normalizeEmail()
+        .normalizeEmail({ gmail_remove_dots: false })
         .withMessage('Valid email is required'),
     (0, express_validator_1.body)('password')
         .isLength({ min: 6 })
@@ -65,7 +65,7 @@ exports.register = [
 exports.login = [
     (0, express_validator_1.body)('email')
         .isEmail()
-        .normalizeEmail()
+        .normalizeEmail({ gmail_remove_dots: false }) // keep dots
         .withMessage('Valid email is required'),
     (0, express_validator_1.body)('password')
         .notEmpty()

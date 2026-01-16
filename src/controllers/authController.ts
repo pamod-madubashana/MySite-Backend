@@ -12,6 +12,7 @@ export const register = [
   
   body('email')
     .isEmail()
+    .normalizeEmail({ gmail_remove_dots: false }) // keep dots
     .withMessage('Valid email is required'),
   
   body('password')
@@ -80,6 +81,7 @@ export const register = [
 export const login = [
   body('email')
     .isEmail()
+    .normalizeEmail({ gmail_remove_dots: false }) // keep dots
     .withMessage('Valid email is required'),
   
   body('password')

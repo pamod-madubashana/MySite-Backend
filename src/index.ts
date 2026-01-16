@@ -4,11 +4,12 @@ import helmet from 'helmet'
 import dotenv from 'dotenv'
 import rateLimit from 'express-rate-limit'
 import connectDB, { isDatabaseConnected } from './config/database'
-import authRoutes from './routes/auth'
-import articleRoutes from './routes/articles'
-import githubRoutes from './routes/github'
-import settingsRoutes from './routes/settings'
-import projectRoutes from './routes/projects'
+import authRoutes from './routes/auth';
+import articleRoutes from './routes/articles';
+import githubRoutes from './routes/github';
+import settingsRoutes from './routes/settings';
+import projectRoutes from './routes/projects';
+import dashboardRoutes from './routes/dashboard';
 
 dotenv.config()
 
@@ -91,6 +92,7 @@ app.use('/api/articles', articleRoutes)
 app.use('/api/github', githubRoutes)
 app.use('/api/settings', settingsRoutes)
 app.use('/api/projects', projectRoutes)
+app.use('/api/dashboard', dashboardRoutes)
 
 
 app.get("/", (req, res) => {
