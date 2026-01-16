@@ -13,15 +13,16 @@ const router = Router();
 
 // Public routes - only published projects
 router.get('/', getPublishedProjects);
-router.get('/:id', getProjectById);
 
-// Admin routes - requires authentication
-router.use(authenticateToken);
-router.use(requireAdmin);
+// Specific route for 'all' to avoid conflict with :id parameter
+router.get('/all', authenticateToken, requireAdmin, getAllProjects); // Get all projects (including drafts) - requires auth
 
-router.get('/all', getAllProjects); // Get all projects (including drafts)
-router.post('/', createProject);
-router.put('/:id', updateProject);
-router.delete('/:id', deleteProject);
+// Route for specific project by ID - must come after /all to avoid conflict
+router.get('/:id', getProjectById); // Get specific project by ID - public
+
+// Admin routes for CRUD operations
+router.post('/', authenticateToken, requireAdmin, createProject);
+router.put('/:id', authenticateToken, requireAdmin, updateProject);
+router.delete('/:id', authenticateToken, requireAdmin, deleteProject);
 
 export default router;

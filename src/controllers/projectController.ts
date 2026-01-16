@@ -9,29 +9,45 @@ export const getPublishedProjects = async (req: Request, res: Response) => {
     const query: any = { status: 'published' };
     
     if (search) {
-      query.$text = { $search: search as string };
+      // Use regular expression search instead of text index to avoid MongoDB text index errors
+      const searchString = search as string;
+      // Only create regex if search string is not empty
+      if (searchString.trim()) {
+        const searchRegex = new RegExp(searchString, 'i');
+        query.$or = [
+          { title: searchRegex },
+          { description: searchRegex },
+          { techStack: { $in: [searchRegex] } }
+        ];
+      }
     }
     
     if (featured === 'true') {
       query.featured = true;
     }
     
-    const projects = await Project.find(query)
-      .sort({ featured: -1, createdAt: -1 })
-      .limit(Number(limit) * 1)
-      .skip((Number(page) - 1) * Number(limit))
-      .exec();
+    try {
+      const projects = await Project.find(query)
+        .sort({ featured: -1, createdAt: -1 })
+        .limit(Number(limit) * 1)
+        .skip((Number(page) - 1) * Number(limit))
+        .exec();
+        
+      const total = await Project.countDocuments(query);
       
-    const total = await Project.countDocuments(query);
-    
-    res.json({
-      projects,
-      totalPages: Math.ceil(total / Number(limit)),
-      currentPage: Number(page),
-      total
-    });
+      res.json({
+        projects,
+        totalPages: Math.ceil(total / Number(limit)),
+        currentPage: Number(page),
+        total
+      });
+    } catch (dbError) {
+      console.error('Database error in getPublishedProjects:', dbError);
+      res.status(500).json({ error: 'Database error while fetching published projects' });
+    }
   } catch (error) {
-    res.status(500).json({ error: 'Server error while fetching projects' });
+    console.error('General error in getPublishedProjects:', error);
+    res.status(500).json({ error: 'Server error while fetching published projects' });
   }
 };
 
@@ -42,7 +58,17 @@ export const getAllProjects = async (req: Request, res: Response) => {
     const query: any = {};
     
     if (search) {
-      query.$text = { $search: search as string };
+      // Use regular expression search instead of text index to avoid MongoDB text index errors
+      const searchString = search as string;
+      // Only create regex if search string is not empty
+      if (searchString.trim()) {
+        const searchRegex = new RegExp(searchString, 'i');
+        query.$or = [
+          { title: searchRegex },
+          { description: searchRegex },
+          { techStack: { $in: [searchRegex] } }
+        ];
+      }
     }
     
     if (status) {
@@ -53,22 +79,28 @@ export const getAllProjects = async (req: Request, res: Response) => {
       query.featured = featured === 'true';
     }
     
-    const projects = await Project.find(query)
-      .sort({ featured: -1, createdAt: -1 })
-      .limit(Number(limit) * 1)
-      .skip((Number(page) - 1) * Number(limit))
-      .exec();
+    try {
+      const projects = await Project.find(query)
+        .sort({ featured: -1, createdAt: -1 })
+        .limit(Number(limit) * 1)
+        .skip((Number(page) - 1) * Number(limit))
+        .exec();
+        
+      const total = await Project.countDocuments(query);
       
-    const total = await Project.countDocuments(query);
-    
-    res.json({
-      projects,
-      totalPages: Math.ceil(total / Number(limit)),
-      currentPage: Number(page),
-      total
-    });
+      res.json({
+        projects,
+        totalPages: Math.ceil(total / Number(limit)),
+        currentPage: Number(page),
+        total
+      });
+    } catch (dbError) {
+      console.error('Database error in getAllProjects:', dbError);
+      res.status(500).json({ error: 'Database error while fetching all projects' });
+    }
   } catch (error) {
-    res.status(500).json({ error: 'Server error while fetching projects' });
+    console.error('General error in getAllProjects:', error);
+    res.status(500).json({ error: 'Server error while fetching all projects' });
   }
 };
 
@@ -82,7 +114,8 @@ export const getProjectById = async (req: Request, res: Response) => {
     
     res.json(project);
   } catch (error) {
-    res.status(500).json({ error: 'Server error while fetching project' });
+    console.error('Error in getProjectById:', error);
+    res.status(500).json({ error: 'Server error while fetching project by ID' });
   }
 };
 
