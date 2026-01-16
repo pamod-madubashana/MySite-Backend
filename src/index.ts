@@ -11,6 +11,9 @@ import settingsRoutes from './routes/settings';
 import projectRoutes from './routes/projects';
 import dashboardRoutes from './routes/dashboard';
 import enhancedDashboardRoutes from './routes/enhancedDashboard';
+import timelineRoutes from './routes/timeline';
+import techSkillsRoutes from './routes/techSkills';
+import interestsRoutes from './routes/interests';
 
 dotenv.config()
 
@@ -94,7 +97,10 @@ app.use('/api/github', githubRoutes)
 app.use('/api/settings', settingsRoutes)
 app.use('/api/projects', projectRoutes)
 app.use('/api/dashboard', dashboardRoutes)
-app.use('/api/enhanced-dashboard', enhancedDashboardRoutes)
+app.use('/api/enhanced-dashboard', enhancedDashboardRoutes);
+app.use('/api/timeline', timelineRoutes);
+app.use('/api/tech-skills', techSkillsRoutes);
+app.use('/api/interests', interestsRoutes);
 
 
 app.get("/", (req, res) => {
