@@ -10,11 +10,14 @@ import {
 
 const router = express.Router();
 
-// All timeline routes require admin authentication
+// Public route for getting timeline items (no authentication required)
+router.get('/public', getAllTimelineItems);
+
+// All admin timeline routes require admin authentication
 router.use(authenticateToken);
 router.use(requireAdmin);
 
-// Get all timeline items
+// Get all timeline items (admin only)
 router.get('/', getAllTimelineItems);
 
 // Get a specific timeline item
