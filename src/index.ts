@@ -10,6 +10,7 @@ import githubRoutes from './routes/github';
 import settingsRoutes from './routes/settings';
 import projectRoutes from './routes/projects';
 import dashboardRoutes from './routes/dashboard';
+import enhancedDashboardRoutes from './routes/enhancedDashboard';
 
 dotenv.config()
 
@@ -93,6 +94,7 @@ app.use('/api/github', githubRoutes)
 app.use('/api/settings', settingsRoutes)
 app.use('/api/projects', projectRoutes)
 app.use('/api/dashboard', dashboardRoutes)
+app.use('/api/enhanced-dashboard', enhancedDashboardRoutes)
 
 
 app.get("/", (req, res) => {
