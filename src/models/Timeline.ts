@@ -3,7 +3,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface ITimeline extends Document {
   year: string;
   role: string;
-  company: string;
+  company?: string;
   description: string;
   icon: string;
   order: number;
@@ -26,7 +26,7 @@ const timelineSchema = new Schema<ITimeline>({
   },
   company: {
     type: String,
-    required: [true, 'Company is required'],
+    required: false,
     trim: true,
     maxlength: 100
   },

@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+import { seedDatabaseIfEmpty } from '../controllers/seedController';
 
 let isConnected = false;
 
@@ -19,6 +20,9 @@ const connectDB = async () => {
     isConnected = true;
     console.log(`📊 Database: ${conn.connection.name}`);
     
+    // Seed database with default values if collections are empty
+    await seedDatabaseIfEmpty();
+    
     // Handle connection events
     mongoose.connection.on('error', (err) => {
       console.error('❌ MongoDB connection error:', err);
@@ -35,6 +39,8 @@ const connectDB = async () => {
     mongoose.connection.on('reconnected', () => {
       console.log('🔁 MongoDB reconnected successfully');
       isConnected = true;
+      // Seed database with default values if collections are empty
+      seedDatabaseIfEmpty().catch(console.error);
     });
     
   } catch (error) {

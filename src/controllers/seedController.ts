@@ -6,7 +6,7 @@ import TechSkill from '../models/TechSkills';
 const defaultTimelineData: Array<{
   year: string;
   role: string;
-  company: string;
+  company?: string;
   description: string;
   icon: string;
   order: number;
