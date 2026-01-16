@@ -9,8 +9,6 @@ const connectDB = async () => {
       console.log('Using existing MongoDB connection');
       return;
     }
-
-    console.log('🔄 Attempting to connect to MongoDB...');
     
     const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/portfolio', {
       serverSelectionTimeoutMS: 10000, // Increased to 10 seconds for better reliability
