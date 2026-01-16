@@ -80,7 +80,6 @@ export const register = [
 export const login = [
   body('email')
     .isEmail()
-    .normalizeEmail()
     .withMessage('Valid email is required'),
   
   body('password')
