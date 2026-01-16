@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import Timeline from '../models/Timeline';
 import Interests from '../models/Interests';
+import TechSkill from '../models/TechSkills';
 // Default timeline data
 const defaultTimelineData: Array<{
   year: string;
@@ -56,10 +57,26 @@ const defaultInterestsData: Array<{
   { icon: "Coffee", label: "Late-Night Debugging", order: 4 }
 ];
 
+// Default tech skills data
+const defaultTechSkillsData: Array<{
+  name: string;
+  level: number;
+  category?: string;
+  order: number;
+}> = [
+  { name: "Python", level: 95, category: "Backend", order: 1 },
+  { name: "JavaScript", level: 80, category: "Frontend", order: 2 },
+  { name: "React", level: 65, category: "Frontend", order: 3 },
+  { name: "TypeScript", level: 75, category: "Frontend", order: 4 },
+  { name: "MongoDB", level: 85, category: "Database", order: 5 },
+  { name: "AWS", level: 30, category: "DevOps", order: 6 }
+];
+
 export const seedDatabaseIfEmpty = async () => {
   try {
     const timelineCount = await Timeline.countDocuments();
     const interestsCount = await Interests.countDocuments();
+    const techSkillsCount = await TechSkill.countDocuments();
     
     if (timelineCount === 0) {
       console.log('Seeding timeline data...');
@@ -75,6 +92,14 @@ export const seedDatabaseIfEmpty = async () => {
       console.log('Interests data seeded successfully.');
     } else {
       console.log(`Interests collection already has ${interestsCount} records. Skipping seeding.`);
+    }
+    
+    if (techSkillsCount === 0) {
+      console.log('Seeding tech skills data...');
+      await TechSkill.insertMany(defaultTechSkillsData);
+      console.log('Tech skills data seeded successfully.');
+    } else {
+      console.log(`Tech skills collection already has ${techSkillsCount} records. Skipping seeding.`);
     }
     
     console.log('Database seeding process completed.');
