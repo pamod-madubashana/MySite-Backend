@@ -50,9 +50,7 @@ const determineAllowedOrigins = (): string[] => {
 
 const allowedOrigins = determineAllowedOrigins();
 
-console.log('🔧 CORS Configuration:');
-console.log('   Environment:', process.env.NODE_ENV || 'development');
-console.log('   Allowed Origins:', allowedOrigins);
+console.log('🔧 CORS:', process.env.NODE_ENV || 'development', '- Origins:', allowedOrigins.join(', '));
 
 // Configure CORS to accept both development and production origins
 const corsOptions: cors.CorsOptions = {
@@ -64,7 +62,7 @@ const corsOptions: cors.CorsOptions = {
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      console.log(`⚠️  Blocked CORS request from origin: ${origin}`);
+      console.log(`🚫 Origin blocked: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -120,17 +118,15 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📡 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:8080'}`);
+  console.log(`📡 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:3000,https://pamod.is-a.dev'}`);
   console.log(`📡 CORS Origins: ${process.env.CORS_ORIGINS || 'Not configured'}`);
   
   // Check database connection status after startup
   setTimeout(() => {
     if (isDatabaseConnected()) {
-      console.log('✅ Database connection successfully established');
+      console.log('✅ Database connected');
     } else {
-      console.log('⚠️  Database connection temporarily unavailable');
-      console.log('💡 Server running in limited mode - automatic reconnection attempts in progress');
-      console.log('📝 Note: This is normal behavior for cloud databases with variable connection times');
+      console.log('⚠️  Database connection unavailable - reconnection in progress');
     }
   }, 3000);
 })
