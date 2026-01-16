@@ -3,16 +3,18 @@ import Article from '../models/Article';
 import Project from '../models/Project';
 import Timeline from '../models/Timeline';
 import Interests from '../models/Interests';
+import TechSkill from '../models/TechSkills';
 import User from '../models/User';
 
 export const getEnhancedDashboardData = async (req: Request, res: Response) => {
   try {
     // Get counts for articles and projects
-    const [articlesCount, projectsCount, timelineCount, interestsCount] = await Promise.all([
+    const [articlesCount, projectsCount, timelineCount, interestsCount, techSkillsCount] = await Promise.all([
       Article.countDocuments(),
       Project.countDocuments(),
       Timeline.countDocuments(),
-      Interests.countDocuments()
+      Interests.countDocuments(),
+      TechSkill.countDocuments()
     ]);
 
     // Get recent articles and projects
@@ -57,6 +59,9 @@ export const getEnhancedDashboardData = async (req: Request, res: Response) => {
         },
         interests: {
           total: interestsCount
+        },
+        techSkills: {
+          total: techSkillsCount
         },
         users: {
           total: 1200,
@@ -111,16 +116,7 @@ export const getInterests = async (req: Request, res: Response) => {
 
 export const getTechSkills = async (req: Request, res: Response) => {
   try {
-    // For now, returning hardcoded tech skills
-    // In a real application, this would come from a dedicated TechSkill model
-    const techSkills = [
-      { name: 'Python', level: 95 },
-      { name: 'JavaScript', level: 80 },
-      { name: 'React', level: 65 },
-      { name: 'TypeScript', level: 75 },
-      { name: 'MongoDB', level: 85 },
-      { name: 'AWS', level: 30 }
-    ];
+    const techSkills = await TechSkill.find().sort({ order: 1, createdAt: 1 });
     
     res.status(200).json(techSkills);
   } catch (error) {
