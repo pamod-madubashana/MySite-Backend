@@ -97,7 +97,7 @@ app.use('/api/github', githubRoutes)
 app.use('/api/settings', settingsRoutes)
 app.use('/api/projects', projectRoutes)
 app.use('/api/dashboard', dashboardRoutes)
-app.use('/api/enhanced-dashboard', enhancedDashboardRoutes);
+app.use('/api/dashboard/enhanced', enhancedDashboardRoutes);
 app.use('/api/timeline', timelineRoutes);
 app.use('/api/tech-skills', techSkillsRoutes);
 app.use('/api/interests', interestsRoutes);
