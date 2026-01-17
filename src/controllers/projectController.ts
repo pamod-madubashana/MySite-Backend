@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import Project from '../models/Project';
+import { handleProjectImageUpload } from '../utils/imageUploadHandler';
 
 export const getPublishedProjects = async (req: Request, res: Response) => {
   try {
@@ -119,6 +120,120 @@ export const getProjectById = async (req: Request, res: Response) => {
   }
 };
 
+export const createProjectWithImage = [
+  body('title')
+    .trim()
+    .isLength({ min: 1, max: 200 })
+    .withMessage('Title is required and must be less than 200 characters'),
+  
+  body('description')
+    .trim()
+    .isLength({ min: 1, max: 1000 })
+    .withMessage('Description is required and must be less than 1000 characters'),
+  
+  body('techStack')
+    .custom((value) => {
+      // Check if it's an array with at least one item
+      if (Array.isArray(value) && value.length >= 1) {
+        return true;
+      }
+      
+      // If it's a string, check if it can be parsed as an array with at least one item
+      if (typeof value === 'string') {
+        try {
+          const parsed = JSON.parse(value);
+          if (Array.isArray(parsed) && parsed.length >= 1) {
+            return true;
+          }
+          // Also check if it's a comma-separated string
+          const splitValues = value.split(',').map(tag => tag.trim()).filter(tag => tag);
+          if (splitValues.length >= 1) {
+            return true;
+          }
+        } catch (e) {
+          // If it's not valid JSON, try to split by commas
+          const splitValues = value.split(',').map(tag => tag.trim()).filter(tag => tag);
+          if (splitValues.length >= 1) {
+            return true;
+          }
+        }
+      }
+      
+      // If neither condition is met, throw an error
+      throw new Error('Tech stack must be an array with at least one item');
+    }),
+  
+  body('status')
+    .isIn(['draft', 'published'])
+    .withMessage('Status must be either draft or published'),
+  
+  body('githubUrl')
+    .optional()
+    .isURL()
+    .withMessage('GitHub URL must be a valid URL'),
+  
+  body('liveUrl')
+    .optional()
+    .isURL()
+    .withMessage('Live URL must be a valid URL'),
+  
+  body('featured')
+    .optional()
+    .isBoolean()
+    .withMessage('Featured must be a boolean'),
+  
+  async (req: Request, res: Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+      
+      // Handle image uploads
+      let imageResults: { thumbnail?: string; screenshots?: string[] };
+      try {
+        imageResults = await handleProjectImageUpload(req);
+      } catch (imageError: any) {
+        return res.status(400).json({ error: imageError.message });
+      }
+      
+      const { title, description, techStack, githubUrl, liveUrl, featured, status } = req.body;
+      
+      // Parse techStack if it's a string (from form data)
+      let parsedTechStack = techStack;
+      if (typeof techStack === 'string') {
+        try {
+          parsedTechStack = JSON.parse(techStack);
+        } catch (e) {
+          // If it's not JSON, split by comma as fallback
+          parsedTechStack = techStack.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag);
+        }
+      }
+      
+      const project = new Project({
+        title,
+        description,
+        techStack: parsedTechStack,
+        githubUrl,
+        liveUrl,
+        featured: featured || false,
+        status: status || 'draft',
+        thumbnail: imageResults.thumbnail,
+        screenshots: imageResults.screenshots
+      });
+      
+      await project.save();
+      
+      res.status(201).json({
+        message: 'Project created successfully',
+        project
+      });
+    } catch (error) {
+      res.status(500).json({ error: 'Server error while creating project' });
+    }
+  }
+];
+
 export const createProject = [
   body('title')
     .trim()
@@ -131,8 +246,36 @@ export const createProject = [
     .withMessage('Description is required and must be less than 1000 characters'),
   
   body('techStack')
-    .isArray({ min: 1 })
-    .withMessage('Tech stack must be an array with at least one item'),
+    .custom((value) => {
+      // Check if it's an array with at least one item
+      if (Array.isArray(value) && value.length >= 1) {
+        return true;
+      }
+      
+      // If it's a string, check if it can be parsed as an array with at least one item
+      if (typeof value === 'string') {
+        try {
+          const parsed = JSON.parse(value);
+          if (Array.isArray(parsed) && parsed.length >= 1) {
+            return true;
+          }
+          // Also check if it's a comma-separated string
+          const splitValues = value.split(',').map(tag => tag.trim()).filter(tag => tag);
+          if (splitValues.length >= 1) {
+            return true;
+          }
+        } catch (e) {
+          // If it's not valid JSON, try to split by commas
+          const splitValues = value.split(',').map(tag => tag.trim()).filter(tag => tag);
+          if (splitValues.length >= 1) {
+            return true;
+          }
+        }
+      }
+      
+      // If neither condition is met, throw an error
+      throw new Error('Tech stack must be an array with at least one item');
+    }),
   
   body('status')
     .isIn(['draft', 'published'])
@@ -186,6 +329,134 @@ export const createProject = [
   }
 ];
 
+export const updateProjectWithImage = [
+  body('title')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 200 })
+    .withMessage('Title must be less than 200 characters'),
+  
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 1000 })
+    .withMessage('Description must be less than 1000 characters'),
+  
+  body('techStack')
+    .optional()
+    .custom((value) => {
+      // Check if it's an array with at least one item
+      if (Array.isArray(value) && value.length >= 1) {
+        return true;
+      }
+      
+      // If it's a string, check if it can be parsed as an array with at least one item
+      if (typeof value === 'string') {
+        try {
+          const parsed = JSON.parse(value);
+          if (Array.isArray(parsed) && parsed.length >= 1) {
+            return true;
+          }
+          // Also check if it's a comma-separated string
+          const splitValues = value.split(',').map(tag => tag.trim()).filter(tag => tag);
+          if (splitValues.length >= 1) {
+            return true;
+          }
+        } catch (e) {
+          // If it's not valid JSON, try to split by commas
+          const splitValues = value.split(',').map(tag => tag.trim()).filter(tag => tag);
+          if (splitValues.length >= 1) {
+            return true;
+          }
+        }
+      }
+      
+      // If neither condition is met, throw an error
+      throw new Error('Tech stack must be an array with at least one item');
+    }),
+  
+  body('status')
+    .optional()
+    .isIn(['draft', 'published'])
+    .withMessage('Status must be either draft or published'),
+  
+  body('githubUrl')
+    .optional()
+    .isURL()
+    .withMessage('GitHub URL must be a valid URL'),
+  
+  body('liveUrl')
+    .optional()
+    .isURL()
+    .withMessage('Live URL must be a valid URL'),
+  
+  body('featured')
+    .optional()
+    .isBoolean()
+    .withMessage('Featured must be a boolean'),
+  
+  async (req: Request, res: Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+      
+      // Handle image uploads
+      let imageResults: { thumbnail?: string; screenshots?: string[] };
+      try {
+        imageResults = await handleProjectImageUpload(req);
+      } catch (imageError: any) {
+        return res.status(400).json({ error: imageError.message });
+      }
+      
+      const { title, description, techStack, githubUrl, liveUrl, featured, status } = req.body;
+      
+      const updateData: any = {};
+      if (title !== undefined) updateData.title = title;
+      if (description !== undefined) updateData.description = description;
+      
+      // Parse techStack if it's a string (from form data)
+      if (techStack !== undefined) {
+        if (typeof techStack === 'string') {
+          try {
+            updateData.techStack = JSON.parse(techStack);
+          } catch (e) {
+            // If it's not JSON, split by comma as fallback
+            updateData.techStack = techStack.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag);
+          }
+        } else {
+          updateData.techStack = techStack;
+        }
+      }
+      
+      if (githubUrl !== undefined) updateData.githubUrl = githubUrl;
+      if (liveUrl !== undefined) updateData.liveUrl = liveUrl;
+      if (featured !== undefined) updateData.featured = featured;
+      if (status !== undefined) updateData.status = status;
+      if (imageResults.thumbnail !== undefined) updateData.thumbnail = imageResults.thumbnail;
+      if (imageResults.screenshots !== undefined) updateData.screenshots = imageResults.screenshots;
+      
+      const project = await Project.findByIdAndUpdate(
+        req.params.id,
+        updateData,
+        { new: true, runValidators: true }
+      );
+      
+      if (!project) {
+        return res.status(404).json({ error: 'Project not found' });
+      }
+      
+      res.json({
+        message: 'Project updated successfully',
+        project
+      });
+    } catch (error) {
+      res.status(500).json({ error: 'Server error while updating project' });
+    }
+  }
+];
+
 export const updateProject = [
   body('title')
     .optional()
@@ -201,8 +472,36 @@ export const updateProject = [
   
   body('techStack')
     .optional()
-    .isArray({ min: 1 })
-    .withMessage('Tech stack must be an array with at least one item'),
+    .custom((value) => {
+      // Check if it's an array with at least one item
+      if (Array.isArray(value) && value.length >= 1) {
+        return true;
+      }
+      
+      // If it's a string, check if it can be parsed as an array with at least one item
+      if (typeof value === 'string') {
+        try {
+          const parsed = JSON.parse(value);
+          if (Array.isArray(parsed) && parsed.length >= 1) {
+            return true;
+          }
+          // Also check if it's a comma-separated string
+          const splitValues = value.split(',').map(tag => tag.trim()).filter(tag => tag);
+          if (splitValues.length >= 1) {
+            return true;
+          }
+        } catch (e) {
+          // If it's not valid JSON, try to split by commas
+          const splitValues = value.split(',').map(tag => tag.trim()).filter(tag => tag);
+          if (splitValues.length >= 1) {
+            return true;
+          }
+        }
+      }
+      
+      // If neither condition is met, throw an error
+      throw new Error('Tech stack must be an array with at least one item');
+    }),
   
   body('status')
     .optional()
