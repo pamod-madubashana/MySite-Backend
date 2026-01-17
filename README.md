@@ -1,4 +1,4 @@
-# Pamod Madhusanka - Backend API
+# Pamod Madubashana - Backend API
 
 RESTful API built with Express.js and MongoDB for personal portfolio management.
 
