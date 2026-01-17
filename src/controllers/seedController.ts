@@ -113,38 +113,21 @@ export const seedDatabaseIfEmpty = async () => {
     const techStackCategoriesCount = await TechStackCategory.countDocuments();
     
     if (timelineCount === 0) {
-      console.log('Seeding timeline data...');
       await Timeline.insertMany(defaultTimelineData);
-      console.log('Timeline data seeded successfully.');
-    } else {
-      console.log(`Timeline collection already has ${timelineCount} records. Skipping seeding.`);
     }
-    
+  
     if (interestsCount === 0) {
-      console.log('Seeding interests data...');
       await Interests.insertMany(defaultInterestsData);
-      console.log('Interests data seeded successfully.');
-    } else {
-      console.log(`Interests collection already has ${interestsCount} records. Skipping seeding.`);
     }
     
     if (techSkillsCount === 0) {
-      console.log('Seeding tech skills data...');
       await TechSkill.insertMany(defaultTechSkillsData);
-      console.log('Tech skills data seeded successfully.');
-    } else {
-      console.log(`Tech skills collection already has ${techSkillsCount} records. Skipping seeding.`);
-    }
+    } 
     
     if (techStackCategoriesCount === 0) {
-      console.log('Seeding tech stack categories data...');
       await TechStackCategory.insertMany(defaultTechStackCategoriesData);
-      console.log('Tech stack categories data seeded successfully.');
-    } else {
-      console.log(`Tech stack categories collection already has ${techStackCategoriesCount} records. Skipping seeding.`);
-    }
-    
-    console.log('Database seeding process completed.');
+    } 
+
   } catch (error) {
     console.error('Error during database seeding:', error);
   }
