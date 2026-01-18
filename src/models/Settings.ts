@@ -17,7 +17,7 @@ export interface ISettings extends Document {
   socialLinks: {
     github?: string
     linkedin?: string
-    twitter?: string
+    telegram?: string
     email?: string
   }
   githubUsername?: string
@@ -68,7 +68,7 @@ const settingsSchema = new Schema<ISettings>({
   socialLinks: {
     github: String,
     linkedin: String,
-    twitter: String,
+    telegram: String,
     email: String
   },
   githubUsername: {
