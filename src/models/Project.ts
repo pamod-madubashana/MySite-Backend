@@ -3,7 +3,8 @@ import mongoose, { Document, Schema } from 'mongoose'
 export interface IProject extends Document {
   title: string
   description: string
-  techStack: string[]
+  tags: string[]
+  languages: string[]
   githubUrl?: string
   liveUrl?: string
   featured: boolean
@@ -26,7 +27,12 @@ const projectSchema = new Schema<IProject>({
     required: [true, 'Description is required'],
     maxlength: 1000
   },
-  techStack: [{
+  tags: [{
+    type: String,
+    required: true,
+    trim: true
+  }],
+  languages: [{
     type: String,
     required: true,
     trim: true
@@ -70,7 +76,7 @@ const projectSchema = new Schema<IProject>({
 })
 
 // Index for search optimization
-projectSchema.index({ title: 'text', description: 'text', techStack: 'text' })
+projectSchema.index({ title: 'text', description: 'text', tags: 'text', languages: 'text' })
 projectSchema.index({ featured: 1, createdAt: -1 })
 projectSchema.index({ status: 1, createdAt: -1 })
 

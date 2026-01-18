@@ -131,7 +131,7 @@ export const createProjectWithImage = [
     .isLength({ min: 1, max: 1000 })
     .withMessage('Description is required and must be less than 1000 characters'),
   
-  body('techStack')
+  body('tags')
     .custom((value) => {
       // Check if it's an array with at least one item
       if (Array.isArray(value) && value.length >= 1) {
@@ -160,7 +160,44 @@ export const createProjectWithImage = [
       }
       
       // If neither condition is met, throw an error
-      throw new Error('Tech stack must be an array with at least one item');
+      throw new Error('Tags must be an array with at least one item');
+    }),
+  
+  body('languages')
+    .custom((value) => {
+      // Check if it's an array
+      if (Array.isArray(value)) {
+        return true;
+      }
+      
+      // If it's a string, check if it can be parsed as an array
+      if (typeof value === 'string') {
+        try {
+          const parsed = JSON.parse(value);
+          if (Array.isArray(parsed)) {
+            return true;
+          }
+          // Also check if it's a comma-separated string
+          const splitValues = value.split(',').map(lang => lang.trim()).filter(lang => lang);
+          if (splitValues.length >= 0) {  // Allow empty arrays
+            return true;
+          }
+        } catch (e) {
+          // If it's not valid JSON, try to split by commas
+          const splitValues = value.split(',').map(lang => lang.trim()).filter(lang => lang);
+          if (splitValues.length >= 0) {  // Allow empty arrays
+            return true;
+          }
+        }
+      }
+      
+      // If it's undefined, that's also acceptable
+      if (value === undefined) {
+        return true;
+      }
+      
+      // If none of the conditions are met, throw an error
+      throw new Error('Languages must be an array or a comma-separated string');
     }),
   
   body('status')
@@ -197,23 +234,35 @@ export const createProjectWithImage = [
         return res.status(400).json({ error: imageError.message });
       }
       
-      const { title, description, techStack, githubUrl, liveUrl, featured, status } = req.body;
+      const { title, description, tags, languages, githubUrl, liveUrl, featured, status } = req.body;
       
-      // Parse techStack if it's a string (from form data)
-      let parsedTechStack = techStack;
-      if (typeof techStack === 'string') {
+      // Parse tags if it's a string (from form data)
+      let parsedTags = tags;
+      if (typeof tags === 'string') {
         try {
-          parsedTechStack = JSON.parse(techStack);
+          parsedTags = JSON.parse(tags);
         } catch (e) {
           // If it's not JSON, split by comma as fallback
-          parsedTechStack = techStack.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag);
+          parsedTags = tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag);
+        }
+      }
+      
+      // Parse languages if it's a string (from form data)
+      let parsedLanguages = languages || [];
+      if (typeof languages === 'string') {
+        try {
+          parsedLanguages = JSON.parse(languages);
+        } catch (e) {
+          // If it's not JSON, split by comma as fallback
+          parsedLanguages = languages.split(',').map((lang: string) => lang.trim()).filter((lang: string) => lang);
         }
       }
       
       const project = new Project({
         title,
         description,
-        techStack: parsedTechStack,
+        tags: parsedTags,
+        languages: parsedLanguages,
         githubUrl,
         liveUrl,
         featured: featured || false,
@@ -245,7 +294,7 @@ export const createProject = [
     .isLength({ min: 1, max: 1000 })
     .withMessage('Description is required and must be less than 1000 characters'),
   
-  body('techStack')
+  body('tags')
     .custom((value) => {
       // Check if it's an array with at least one item
       if (Array.isArray(value) && value.length >= 1) {
@@ -274,7 +323,44 @@ export const createProject = [
       }
       
       // If neither condition is met, throw an error
-      throw new Error('Tech stack must be an array with at least one item');
+      throw new Error('Tags must be an array with at least one item');
+    }),
+  
+  body('languages')
+    .custom((value) => {
+      // Check if it's an array
+      if (Array.isArray(value)) {
+        return true;
+      }
+      
+      // If it's a string, check if it can be parsed as an array
+      if (typeof value === 'string') {
+        try {
+          const parsed = JSON.parse(value);
+          if (Array.isArray(parsed)) {
+            return true;
+          }
+          // Also check if it's a comma-separated string
+          const splitValues = value.split(',').map(lang => lang.trim()).filter(lang => lang);
+          if (splitValues.length >= 0) {  // Allow empty arrays
+            return true;
+          }
+        } catch (e) {
+          // If it's not valid JSON, try to split by commas
+          const splitValues = value.split(',').map(lang => lang.trim()).filter(lang => lang);
+          if (splitValues.length >= 0) {  // Allow empty arrays
+            return true;
+          }
+        }
+      }
+      
+      // If it's undefined, that's also acceptable
+      if (value === undefined) {
+        return true;
+      }
+      
+      // If none of the conditions are met, throw an error
+      throw new Error('Languages must be an array or a comma-separated string');
     }),
   
   body('status')
@@ -303,12 +389,13 @@ export const createProject = [
         return res.status(400).json({ errors: errors.array() });
       }
       
-      const { title, description, techStack, githubUrl, liveUrl, featured, status, thumbnail, screenshots } = req.body;
+      const { title, description, tags, languages, githubUrl, liveUrl, featured, status, thumbnail, screenshots } = req.body;
       
       const project = new Project({
         title,
         description,
-        techStack,
+        tags,
+        languages: languages || [],
         githubUrl,
         liveUrl,
         featured: featured || false,
@@ -342,7 +429,7 @@ export const updateProjectWithImage = [
     .isLength({ min: 1, max: 1000 })
     .withMessage('Description must be less than 1000 characters'),
   
-  body('techStack')
+  body('tags')
     .optional()
     .custom((value) => {
       // Check if it's an array with at least one item
@@ -372,7 +459,45 @@ export const updateProjectWithImage = [
       }
       
       // If neither condition is met, throw an error
-      throw new Error('Tech stack must be an array with at least one item');
+      throw new Error('Tags must be an array with at least one item');
+    }),
+  
+  body('languages')
+    .optional()
+    .custom((value) => {
+      // Check if it's an array
+      if (Array.isArray(value)) {
+        return true;
+      }
+      
+      // If it's a string, check if it can be parsed as an array
+      if (typeof value === 'string') {
+        try {
+          const parsed = JSON.parse(value);
+          if (Array.isArray(parsed)) {
+            return true;
+          }
+          // Also check if it's a comma-separated string
+          const splitValues = value.split(',').map(lang => lang.trim()).filter(lang => lang);
+          if (splitValues.length >= 0) {  // Allow empty arrays
+            return true;
+          }
+        } catch (e) {
+          // If it's not valid JSON, try to split by commas
+          const splitValues = value.split(',').map(lang => lang.trim()).filter(lang => lang);
+          if (splitValues.length >= 0) {  // Allow empty arrays
+            return true;
+          }
+        }
+      }
+      
+      // If it's undefined, that's also acceptable
+      if (value === undefined) {
+        return true;
+      }
+      
+      // If none of the conditions are met, throw an error
+      throw new Error('Languages must be an array or a comma-separated string');
     }),
   
   body('status')
@@ -410,23 +535,37 @@ export const updateProjectWithImage = [
         return res.status(400).json({ error: imageError.message });
       }
       
-      const { title, description, techStack, githubUrl, liveUrl, featured, status } = req.body;
+      const { title, description, tags, languages, githubUrl, liveUrl, featured, status } = req.body;
       
       const updateData: any = {};
       if (title !== undefined) updateData.title = title;
       if (description !== undefined) updateData.description = description;
       
-      // Parse techStack if it's a string (from form data)
-      if (techStack !== undefined) {
-        if (typeof techStack === 'string') {
+      // Parse tags if it's a string (from form data)
+      if (tags !== undefined) {
+        if (typeof tags === 'string') {
           try {
-            updateData.techStack = JSON.parse(techStack);
+            updateData.tags = JSON.parse(tags);
           } catch (e) {
             // If it's not JSON, split by comma as fallback
-            updateData.techStack = techStack.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag);
+            updateData.tags = tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag);
           }
         } else {
-          updateData.techStack = techStack;
+          updateData.tags = tags;
+        }
+      }
+      
+      // Parse languages if it's a string (from form data)
+      if (languages !== undefined) {
+        if (typeof languages === 'string') {
+          try {
+            updateData.languages = JSON.parse(languages);
+          } catch (e) {
+            // If it's not JSON, split by comma as fallback
+            updateData.languages = languages.split(',').map((lang: string) => lang.trim()).filter((lang: string) => lang);
+          }
+        } else {
+          updateData.languages = languages;
         }
       }
       
@@ -470,7 +609,7 @@ export const updateProject = [
     .isLength({ min: 1, max: 1000 })
     .withMessage('Description must be less than 1000 characters'),
   
-  body('techStack')
+  body('tags')
     .optional()
     .custom((value) => {
       // Check if it's an array with at least one item
@@ -500,7 +639,45 @@ export const updateProject = [
       }
       
       // If neither condition is met, throw an error
-      throw new Error('Tech stack must be an array with at least one item');
+      throw new Error('Tags must be an array with at least one item');
+    }),
+  
+  body('languages')
+    .optional()
+    .custom((value) => {
+      // Check if it's an array
+      if (Array.isArray(value)) {
+        return true;
+      }
+      
+      // If it's a string, check if it can be parsed as an array
+      if (typeof value === 'string') {
+        try {
+          const parsed = JSON.parse(value);
+          if (Array.isArray(parsed)) {
+            return true;
+          }
+          // Also check if it's a comma-separated string
+          const splitValues = value.split(',').map(lang => lang.trim()).filter(lang => lang);
+          if (splitValues.length >= 0) {  // Allow empty arrays
+            return true;
+          }
+        } catch (e) {
+          // If it's not valid JSON, try to split by commas
+          const splitValues = value.split(',').map(lang => lang.trim()).filter(lang => lang);
+          if (splitValues.length >= 0) {  // Allow empty arrays
+            return true;
+          }
+        }
+      }
+      
+      // If it's undefined, that's also acceptable
+      if (value === undefined) {
+        return true;
+      }
+      
+      // If none of the conditions are met, throw an error
+      throw new Error('Languages must be an array or a comma-separated string');
     }),
   
   body('status')
@@ -530,12 +707,13 @@ export const updateProject = [
         return res.status(400).json({ errors: errors.array() });
       }
       
-      const { title, description, techStack, githubUrl, liveUrl, featured, status, thumbnail, screenshots } = req.body;
+      const { title, description, tags, languages, githubUrl, liveUrl, featured, status, thumbnail, screenshots } = req.body;
       
       const updateData: any = {};
       if (title !== undefined) updateData.title = title;
       if (description !== undefined) updateData.description = description;
-      if (techStack !== undefined) updateData.techStack = techStack;
+      if (tags !== undefined) updateData.tags = tags;
+      if (languages !== undefined) updateData.languages = languages;
       if (githubUrl !== undefined) updateData.githubUrl = githubUrl;
       if (liveUrl !== undefined) updateData.liveUrl = liveUrl;
       if (featured !== undefined) updateData.featured = featured;
