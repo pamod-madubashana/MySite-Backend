@@ -33,11 +33,14 @@ const router = Router();
 
 // Public routes
 router.get('/', getPublishedArticles);
+router.get('/all', authenticateToken, requireAdmin, getAllArticles);
 router.get('/:id', getArticleById);
+
 
 // Admin routes
 router.use(authenticateToken);
 router.use(requireAdmin);
+
 
 // Regular article routes (without image upload)
 router.post('/', createArticle);
