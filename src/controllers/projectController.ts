@@ -207,8 +207,8 @@ export const createProjectWithImage = [
   body('githubUrl')
     .optional()
     .custom((value) => {
-      // Allow empty/null values or valid URLs
-      if (!value) return true;
+      // Allow null, undefined, empty string, or valid URLs
+      if (value === null || value === undefined || value === '') return true;
       try {
         new URL(value);
         return true;
@@ -221,8 +221,8 @@ export const createProjectWithImage = [
   body('liveUrl')
     .optional()
     .custom((value) => {
-      // Allow empty/null values or valid URLs
-      if (!value) return true;
+      // Allow null, undefined, empty string, or valid URLs
+      if (value === null || value === undefined || value === '') return true;
       try {
         new URL(value);
         return true;
@@ -388,8 +388,8 @@ export const createProject = [
   body('githubUrl')
     .optional()
     .custom((value) => {
-      // Allow empty/null values or valid URLs
-      if (!value) return true;
+      // Allow null, undefined, empty string, or valid URLs
+      if (value === null || value === undefined || value === '') return true;
       try {
         new URL(value);
         return true;
@@ -402,8 +402,8 @@ export const createProject = [
   body('liveUrl')
     .optional()
     .custom((value) => {
-      // Allow empty/null values or valid URLs
-      if (!value) return true;
+      // Allow null, undefined, empty string, or valid URLs
+      if (value === null || value === undefined || value === '') return true;
       try {
         new URL(value);
         return true;

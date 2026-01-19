@@ -41,7 +41,10 @@ const projectSchema = new Schema<IProject>({
     type: String,
     validate: {
       validator: function(v: string) {
-        return /^https:\/\/github\.com\/[a-zA-Z0-9\-_.]+\/[a-zA-Z0-9\-_.]+$/.test(v);
+        // Allow empty/null values or valid GitHub URLs
+        if (!v) return true;
+        const githubRegex = /^https:\/\/github\.com\/[a-zA-Z0-9\-_\.]+\/[a-zA-Z0-9\-_\.]+$/;
+        return githubRegex.test(v);
       },
       message: 'Please enter a valid GitHub URL'
     }
@@ -50,7 +53,10 @@ const projectSchema = new Schema<IProject>({
     type: String,
     validate: {
       validator: function(v: string) {
-        return /^https?:\/\/.+$/.test(v);
+        // Allow empty/null values or valid URLs
+        if (!v) return true;
+        const urlRegex = /^https?:\/\/.+$/;
+        return urlRegex.test(v);
       },
       message: 'Please enter a valid URL'
     }
