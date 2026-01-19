@@ -206,12 +206,30 @@ export const createProjectWithImage = [
   
   body('githubUrl')
     .optional()
-    .isURL()
+    .custom((value) => {
+      // Allow empty/null values or valid URLs
+      if (!value) return true;
+      try {
+        new URL(value);
+        return true;
+      } catch {
+        return false;
+      }
+    })
     .withMessage('GitHub URL must be a valid URL'),
   
   body('liveUrl')
     .optional()
-    .isURL()
+    .custom((value) => {
+      // Allow empty/null values or valid URLs
+      if (!value) return true;
+      try {
+        new URL(value);
+        return true;
+      } catch {
+        return false;
+      }
+    })
     .withMessage('Live URL must be a valid URL'),
   
   body('featured')
@@ -369,12 +387,30 @@ export const createProject = [
   
   body('githubUrl')
     .optional()
-    .isURL()
+    .custom((value) => {
+      // Allow empty/null values or valid URLs
+      if (!value) return true;
+      try {
+        new URL(value);
+        return true;
+      } catch {
+        return false;
+      }
+    })
     .withMessage('GitHub URL must be a valid URL'),
   
   body('liveUrl')
     .optional()
-    .isURL()
+    .custom((value) => {
+      // Allow empty/null values or valid URLs
+      if (!value) return true;
+      try {
+        new URL(value);
+        return true;
+      } catch {
+        return false;
+      }
+    })
     .withMessage('Live URL must be a valid URL'),
   
   body('featured')
@@ -507,12 +543,30 @@ export const updateProjectWithImage = [
   
   body('githubUrl')
     .optional()
-    .isURL()
+    .custom((value) => {
+          // Allow empty/null values or valid URLs
+          if (!value) return true;
+          try {
+            new URL(value);
+            return true;
+          } catch {
+            return false;
+          }
+        })
     .withMessage('GitHub URL must be a valid URL'),
   
   body('liveUrl')
     .optional()
-    .isURL()
+    .custom((value) => {
+          // Allow empty/null values or valid URLs
+          if (!value) return true;
+          try {
+            new URL(value);
+            return true;
+          } catch {
+            return false;
+          }
+        })
     .withMessage('Live URL must be a valid URL'),
   
   body('featured')
@@ -687,12 +741,30 @@ export const updateProject = [
   
   body('githubUrl')
     .optional()
-    .isURL()
+    .custom((value) => {
+          // Allow empty/null values or valid URLs
+          if (!value) return true;
+          try {
+            new URL(value);
+            return true;
+          } catch {
+            return false;
+          }
+        })
     .withMessage('GitHub URL must be a valid URL'),
   
   body('liveUrl')
     .optional()
-    .isURL()
+    .custom((value) => {
+          // Allow empty/null values or valid URLs
+          if (!value) return true;
+          try {
+            new URL(value);
+            return true;
+          } catch {
+            return false;
+          }
+        })
     .withMessage('Live URL must be a valid URL'),
   
   body('featured')
