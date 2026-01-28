@@ -93,18 +93,18 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 // Routes
 
 
-app.use('/api/auth', authRoutes)
-app.use('/api/articles', articleRoutes)
-app.use('/api/github', githubRoutes)
-app.use('/api/settings', settingsRoutes)
-app.use('/api/projects', projectRoutes)
-app.use('/api/dashboard', dashboardRoutes)
-app.use('/api/dashboard/enhanced', enhancedDashboardRoutes);
-app.use('/api/timeline', timelineRoutes);
-app.use('/api/tech-skills', techSkillsRoutes);
-app.use('/api/interests', interestsRoutes);
-app.use('/api/tech-stack-categories', techStackCategoryRoutes);
-app.use('/api/image-upload', imageUploadRoutes);
+app.use('/auth', authRoutes)
+app.use('/articles', articleRoutes)
+app.use('/github', githubRoutes)
+app.use('/settings', settingsRoutes)
+app.use('/projects', projectRoutes)
+app.use('/dashboard', dashboardRoutes)
+app.use('/dashboard/enhanced', enhancedDashboardRoutes);
+app.use('/timeline', timelineRoutes);
+app.use('/tech-skills', techSkillsRoutes);
+app.use('/interests', interestsRoutes);
+app.use('/tech-stack-categories', techStackCategoryRoutes);
+app.use('/image-upload', imageUploadRoutes);
 
 
 app.get("/", (req, res) => {
@@ -117,7 +117,7 @@ app.get("/", (req, res) => {
 
 
 // Health check
-app.get('/api/health', (req, res) => {
+app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() })
 })
 
