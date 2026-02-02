@@ -13,6 +13,6 @@ RESTful API built with Express.js and MongoDB for personal portfolio management.
 
 ## 📫 Contact
 
-- **Email**: [pamod.main@gmail.com](mailto:pamod.main@gmail.com)
+- **Email**: [contact@pamod.is-a.dev](mailto:contact@pamod.is-a.dev)
 - **GitHub**: [pamod-madubashana](https://github.com/pamod-madubashana)
 - **Website**: [pamod.is-a.dev](https://pamod.is-a.dev)
