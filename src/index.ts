@@ -16,6 +16,7 @@ import techSkillsRoutes from './routes/techSkills';
 import interestsRoutes from './routes/interests';
 import techStackCategoryRoutes from './routes/techStackCategories';
 import imageUploadRoutes from './routes/imageUpload';
+import contactRoutes from './routes/contact';
 
 dotenv.config()
 
@@ -105,6 +106,8 @@ app.use('/tech-skills', techSkillsRoutes);
 app.use('/interests', interestsRoutes);
 app.use('/tech-stack-categories', techStackCategoryRoutes);
 app.use('/image-upload', imageUploadRoutes);
+app.use('/contact', contactRoutes);
+app.use('/api/contact', contactRoutes);
 
 
 app.get("/", (req, res) => {
