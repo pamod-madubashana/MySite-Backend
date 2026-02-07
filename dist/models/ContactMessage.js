@@ -34,6 +34,44 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
+const contactReplySchema = new mongoose_1.Schema({
+    subject: {
+        type: String,
+        required: true,
+        trim: true,
+        maxlength: 140,
+    },
+    body: {
+        type: String,
+        required: true,
+        trim: true,
+        maxlength: 5000,
+    },
+    includeOriginal: {
+        type: Boolean,
+        default: true,
+    },
+    sentAt: {
+        type: Date,
+        required: true,
+        default: Date.now,
+    },
+    sentBy: {
+        type: String,
+        enum: ['admin'],
+        required: true,
+        default: 'admin',
+    },
+    toEmail: {
+        type: String,
+        required: true,
+        trim: true,
+        lowercase: true,
+        maxlength: 254,
+    },
+}, {
+    _id: false,
+});
 const contactMessageSchema = new mongoose_1.Schema({
     name: {
         type: String,
@@ -66,8 +104,16 @@ const contactMessageSchema = new mongoose_1.Schema({
     },
     status: {
         type: String,
-        enum: ['new', 'read'],
+        enum: ['new', 'read', 'replied'],
         default: 'new',
+    },
+    replies: {
+        type: [contactReplySchema],
+        default: [],
+    },
+    lastRepliedAt: {
+        type: Date,
+        default: null,
     },
 }, {
     timestamps: true,

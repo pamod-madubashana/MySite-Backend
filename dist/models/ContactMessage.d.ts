@@ -1,5 +1,13 @@
 import mongoose, { Document } from 'mongoose';
-export type ContactMessageStatus = 'new' | 'read';
+export type ContactMessageStatus = 'new' | 'read' | 'replied';
+export interface IContactReply {
+    subject: string;
+    body: string;
+    includeOriginal: boolean;
+    sentAt: Date;
+    sentBy: 'admin';
+    toEmail: string;
+}
 export interface IContactMessage extends Document {
     name: string;
     email: string;
@@ -7,6 +15,8 @@ export interface IContactMessage extends Document {
     ip: string;
     userAgent: string;
     status: ContactMessageStatus;
+    replies: IContactReply[];
+    lastRepliedAt?: Date;
     createdAt: Date;
     updatedAt: Date;
 }

@@ -1,6 +1,15 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
-export type ContactMessageStatus = 'new' | 'read';
+export type ContactMessageStatus = 'new' | 'read' | 'replied';
+
+export interface IContactReply {
+  subject: string;
+  body: string;
+  includeOriginal: boolean;
+  sentAt: Date;
+  sentBy: 'admin';
+  toEmail: string;
+}
 
 export interface IContactMessage extends Document {
   name: string;
@@ -9,9 +18,53 @@ export interface IContactMessage extends Document {
   ip: string;
   userAgent: string;
   status: ContactMessageStatus;
+  replies: IContactReply[];
+  lastRepliedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
+
+const contactReplySchema = new Schema<IContactReply>(
+  {
+    subject: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 140,
+    },
+    body: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 5000,
+    },
+    includeOriginal: {
+      type: Boolean,
+      default: true,
+    },
+    sentAt: {
+      type: Date,
+      required: true,
+      default: Date.now,
+    },
+    sentBy: {
+      type: String,
+      enum: ['admin'],
+      required: true,
+      default: 'admin',
+    },
+    toEmail: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+      maxlength: 254,
+    },
+  },
+  {
+    _id: false,
+  }
+);
 
 const contactMessageSchema = new Schema<IContactMessage>(
   {
@@ -46,8 +99,16 @@ const contactMessageSchema = new Schema<IContactMessage>(
     },
     status: {
       type: String,
-      enum: ['new', 'read'],
+      enum: ['new', 'read', 'replied'],
       default: 'new',
+    },
+    replies: {
+      type: [contactReplySchema],
+      default: [],
+    },
+    lastRepliedAt: {
+      type: Date,
+      default: null,
     },
   },
   {

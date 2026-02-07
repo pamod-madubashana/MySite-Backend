@@ -55,6 +55,7 @@ const interests_1 = __importDefault(require("./routes/interests"));
 const techStackCategories_1 = __importDefault(require("./routes/techStackCategories"));
 const imageUpload_1 = __importDefault(require("./routes/imageUpload"));
 const contact_1 = __importDefault(require("./routes/contact"));
+const adminMessages_1 = __importDefault(require("./routes/adminMessages"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 app.set("trust proxy", 1);
@@ -136,6 +137,7 @@ app.use('/tech-stack-categories', techStackCategories_1.default);
 app.use('/image-upload', imageUpload_1.default);
 app.use('/contact', contact_1.default);
 app.use('/api/contact', contact_1.default);
+app.use('/api/admin', adminMessages_1.default);
 app.get("/", (req, res) => {
     res.json({
         status: "ok",

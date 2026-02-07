@@ -3,13 +3,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateContactMessageStatus = exports.getContactMessages = exports.submitContactMessage = void 0;
+exports.replyToContactMessage = exports.updateContactMessageStatus = exports.getContactMessages = exports.submitContactMessage = void 0;
 const express_validator_1 = require("express-validator");
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const ContactMessage_1 = __importDefault(require("../models/ContactMessage"));
 const CONTACT_MAX_NAME_LENGTH = 80;
 const CONTACT_MAX_EMAIL_LENGTH = 254;
 const CONTACT_MAX_MESSAGE_LENGTH = 2000;
+const REPLY_MIN_SUBJECT_LENGTH = 3;
+const REPLY_MAX_SUBJECT_LENGTH = 140;
+const REPLY_MIN_BODY_LENGTH = 5;
+const REPLY_MAX_BODY_LENGTH = 5000;
 let cachedTransporter = null;
 let cachedTransportUser = '';
 let cachedTransportPass = '';
@@ -30,6 +34,17 @@ const sanitizeMessage = (input) => {
     const normalized = input.replace(/\r\n/g, '\n').replace(/\u0000/g, '');
     return normalized.trim().slice(0, CONTACT_MAX_MESSAGE_LENGTH);
 };
+const sanitizeReplyBody = (input) => {
+    const normalized = input.replace(/\r\n/g, '\n').replace(/\u0000/g, '');
+    return normalized.trim().slice(0, REPLY_MAX_BODY_LENGTH);
+};
+const escapeHtml = (value) => value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+const textToHtml = (value) => escapeHtml(value).replace(/\n/g, '<br />');
 const getRequestIp = (req) => {
     const forwarded = req.headers['x-forwarded-for'];
     if (typeof forwarded === 'string' && forwarded.trim()) {
@@ -63,6 +78,15 @@ const serializeMessage = (message) => ({
     status: message.status,
     ip: message.ip,
     userAgent: message.userAgent,
+    lastRepliedAt: message.lastRepliedAt || null,
+    replies: (message.replies || []).map((reply) => ({
+        subject: reply.subject,
+        body: reply.body,
+        includeOriginal: reply.includeOriginal,
+        sentAt: reply.sentAt,
+        sentBy: reply.sentBy,
+        toEmail: reply.toEmail,
+    })),
     createdAt: message.createdAt,
     updatedAt: message.updatedAt,
 });
@@ -114,6 +138,49 @@ const sendContactEmails = async (params) => {
             text: userMailText,
         }),
     ]);
+};
+const sendAdminReplyEmail = async (params) => {
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const sendAsEmail = process.env.SEND_AS_EMAIL;
+    const sendAsName = process.env.SEND_AS_NAME;
+    const appPassword = process.env.GOOGLE_APP_PASSWORD;
+    if (!adminEmail || !sendAsEmail || !sendAsName || !appPassword) {
+        throw new Error('Reply email environment variables are not fully configured');
+    }
+    const transporter = getTransporter(adminEmail, appPassword);
+    const fromAddress = `"${sendAsName}" <${sendAsEmail}>`;
+    const safeName = sanitizeSingleLine(params.toName, CONTACT_MAX_NAME_LENGTH) || 'there';
+    const safeReplyBody = sanitizeReplyBody(params.body);
+    const safeOriginalMessage = sanitizeMessage(params.originalMessage);
+    const originalSentAt = params.originalSentAt.toISOString();
+    const textParts = [`Hi ${safeName},`, '', safeReplyBody];
+    if (params.includeOriginal) {
+        textParts.push('', '--- Original message ---', `Sent: ${originalSentAt}`, safeOriginalMessage);
+    }
+    textParts.push('', 'Best regards,', sendAsName);
+    const originalBlockHtml = params.includeOriginal
+        ? `
+      <hr style="border:none;border-top:1px solid #d1d5db;margin:24px 0;" />
+      <p style="margin:0 0 8px 0;font-size:13px;color:#6b7280;">Original message (${escapeHtml(originalSentAt)})</p>
+      <blockquote style="margin:0;padding:12px 14px;background:#f3f4f6;border-left:4px solid #9ca3af;color:#111827;white-space:pre-wrap;">${textToHtml(safeOriginalMessage)}</blockquote>
+    `
+        : '';
+    const html = `
+    <div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#111827;">
+      <p style="margin:0 0 12px 0;">Hi ${escapeHtml(safeName)},</p>
+      <div style="margin:0 0 12px 0;white-space:pre-wrap;">${textToHtml(safeReplyBody)}</div>
+      ${originalBlockHtml}
+      <p style="margin:20px 0 0 0;">Best regards,<br />${escapeHtml(sendAsName)}</p>
+    </div>
+  `;
+    await transporter.sendMail({
+        from: fromAddress,
+        to: sanitizeSingleLine(params.toEmail, CONTACT_MAX_EMAIL_LENGTH).toLowerCase(),
+        subject: sanitizeSingleLine(params.subject, REPLY_MAX_SUBJECT_LENGTH),
+        text: textParts.join('\n'),
+        html,
+        replyTo: adminEmail,
+    });
 };
 exports.submitContactMessage = [
     (0, express_validator_1.body)('name')
@@ -209,8 +276,8 @@ exports.updateContactMessageStatus = [
     (0, express_validator_1.body)('status')
         .isString()
         .withMessage('Status is required')
-        .isIn(['new', 'read'])
-        .withMessage('Status must be new or read'),
+        .isIn(['new', 'read', 'replied'])
+        .withMessage('Status must be new, read, or replied'),
     async (req, res) => {
         const validationError = getValidationError(req);
         if (validationError) {
@@ -226,6 +293,75 @@ exports.updateContactMessageStatus = [
         catch (error) {
             console.error('Failed to update contact message status:', error);
             return res.status(500).json({ ok: false, error: 'Failed to update message status' });
+        }
+    },
+];
+exports.replyToContactMessage = [
+    (0, express_validator_1.param)('id').isMongoId().withMessage('Invalid message id'),
+    (0, express_validator_1.body)('subject')
+        .isString()
+        .withMessage('Subject is required')
+        .trim()
+        .isLength({ min: REPLY_MIN_SUBJECT_LENGTH, max: REPLY_MAX_SUBJECT_LENGTH })
+        .withMessage('Subject must be between 3 and 140 characters'),
+    (0, express_validator_1.body)('body')
+        .isString()
+        .withMessage('Message body is required')
+        .trim()
+        .isLength({ min: REPLY_MIN_BODY_LENGTH, max: REPLY_MAX_BODY_LENGTH })
+        .withMessage('Message body must be between 5 and 5000 characters'),
+    (0, express_validator_1.body)('includeOriginal')
+        .optional()
+        .isBoolean()
+        .withMessage('includeOriginal must be a boolean'),
+    async (req, res) => {
+        const validationError = getValidationError(req);
+        if (validationError) {
+            return res.status(400).json({ ok: false, error: validationError });
+        }
+        const subject = sanitizeSingleLine(String(req.body.subject || ''), REPLY_MAX_SUBJECT_LENGTH);
+        const replyBody = sanitizeReplyBody(String(req.body.body || ''));
+        const includeOriginal = req.body.includeOriginal === undefined ? true : Boolean(req.body.includeOriginal);
+        if (subject.length < REPLY_MIN_SUBJECT_LENGTH || replyBody.length < REPLY_MIN_BODY_LENGTH) {
+            return res.status(400).json({ ok: false, error: 'Please provide a valid subject and message' });
+        }
+        try {
+            const message = await ContactMessage_1.default.findById(req.params.id).exec();
+            if (!message) {
+                return res.status(404).json({ ok: false, error: 'Message not found' });
+            }
+            try {
+                await sendAdminReplyEmail({
+                    toEmail: message.email,
+                    toName: message.name,
+                    subject,
+                    body: replyBody,
+                    includeOriginal,
+                    originalMessage: message.message,
+                    originalSentAt: message.createdAt,
+                });
+            }
+            catch (emailError) {
+                console.error('Reply email sending failed:', emailError);
+                return res.status(502).json({ ok: false, error: 'Failed to send email' });
+            }
+            const sentAt = new Date();
+            message.replies.push({
+                subject,
+                body: replyBody,
+                includeOriginal,
+                sentAt,
+                sentBy: 'admin',
+                toEmail: message.email,
+            });
+            message.status = 'replied';
+            message.lastRepliedAt = sentAt;
+            await message.save();
+            return res.status(200).json({ ok: true, message: serializeMessage(message) });
+        }
+        catch (error) {
+            console.error('Failed to send message reply:', error);
+            return res.status(500).json({ ok: false, error: 'Failed to send reply' });
         }
     },
 ];
