@@ -2,6 +2,7 @@ import mongoose, { Document, Schema } from 'mongoose'
 
 export interface IProject extends Document {
   title: string
+  slug: string
   description: string
   tags: string[]
   languages: string[]
@@ -21,6 +22,13 @@ const projectSchema = new Schema<IProject>({
     required: [true, 'Title is required'],
     trim: true,
     maxlength: 200
+  },
+  slug: {
+    type: String,
+    required: [true, 'Slug is required'],
+    unique: true,
+    index: true,
+    trim: true
   },
   description: {
     type: String,
@@ -85,5 +93,6 @@ const projectSchema = new Schema<IProject>({
 projectSchema.index({ title: 'text', description: 'text', tags: 'text', languages: 'text' })
 projectSchema.index({ featured: 1, createdAt: -1 })
 projectSchema.index({ status: 1, createdAt: -1 })
+projectSchema.index({ slug: 1 }, { unique: true })
 
 export default mongoose.model<IProject>('Project', projectSchema)

@@ -2,6 +2,22 @@ import { Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import Project from '../models/Project';
 import { handleProjectImageUpload } from '../utils/imageUploadHandler';
+import { makeUniqueSlug, slugifyProjectTitle } from '../utils/slugify';
+
+const resolveUniqueProjectSlug = async (title: string, excludeProjectId?: string) => {
+  const baseSlug = slugifyProjectTitle(title);
+
+  return makeUniqueSlug(baseSlug, async (candidateSlug) => {
+    const query: any = { slug: candidateSlug };
+
+    if (excludeProjectId) {
+      query._id = { $ne: excludeProjectId };
+    }
+
+    const existing = await Project.exists(query);
+    return Boolean(existing);
+  });
+};
 
 export const getPublishedProjects = async (req: Request, res: Response) => {
   try {
@@ -253,6 +269,7 @@ export const createProjectWithImage = [
       }
       
       const { title, description, tags, languages, githubUrl, liveUrl, featured, status } = req.body;
+      const slug = await resolveUniqueProjectSlug(title);
       
       // Parse tags if it's a string (from form data)
       let parsedTags = tags;
@@ -278,6 +295,7 @@ export const createProjectWithImage = [
       
       const project = new Project({
         title,
+        slug,
         description,
         tags: parsedTags,
         languages: parsedLanguages,
@@ -426,9 +444,11 @@ export const createProject = [
       }
       
       const { title, description, tags, languages, githubUrl, liveUrl, featured, status, thumbnail, screenshots } = req.body;
+      const slug = await resolveUniqueProjectSlug(title);
       
       const project = new Project({
         title,
+        slug,
         description,
         tags,
         languages: languages || [],
@@ -592,7 +612,10 @@ export const updateProjectWithImage = [
       const { title, description, tags, languages, githubUrl, liveUrl, featured, status } = req.body;
       
       const updateData: any = {};
-      if (title !== undefined) updateData.title = title;
+      if (title !== undefined) {
+        updateData.title = title;
+        updateData.slug = await resolveUniqueProjectSlug(title, req.params.id);
+      }
       if (description !== undefined) updateData.description = description;
       
       // Parse tags if it's a string (from form data)
@@ -782,7 +805,10 @@ export const updateProject = [
       const { title, description, tags, languages, githubUrl, liveUrl, featured, status, thumbnail, screenshots } = req.body;
       
       const updateData: any = {};
-      if (title !== undefined) updateData.title = title;
+      if (title !== undefined) {
+        updateData.title = title;
+        updateData.slug = await resolveUniqueProjectSlug(title, req.params.id);
+      }
       if (description !== undefined) updateData.description = description;
       if (tags !== undefined) updateData.tags = tags;
       if (languages !== undefined) updateData.languages = languages;
@@ -824,5 +850,50 @@ export const deleteProject = async (req: Request, res: Response) => {
     res.json({ message: 'Project deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Server error while deleting project' });
+  }
+};
+
+export const getProjectBySlug = async (req: Request, res: Response) => {
+  try {
+    const project = await Project.findOne({ slug: req.params.slug, status: 'published' });
+
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    res.json(project);
+  } catch (error) {
+    console.error('Error in getProjectBySlug:', error);
+    res.status(500).json({ error: 'Server error while fetching project by slug' });
+  }
+};
+
+export const migrateProjectSlugs = async (req: Request, res: Response) => {
+  try {
+    const projectsWithoutSlug = await Project.find({
+      $or: [
+        { slug: { $exists: false } },
+        { slug: null },
+        { slug: '' }
+      ]
+    }).select('_id title slug');
+
+    let updatedCount = 0;
+
+    for (const project of projectsWithoutSlug) {
+      const slug = await resolveUniqueProjectSlug(project.title, String(project._id));
+      project.slug = slug;
+      await project.save();
+      updatedCount += 1;
+    }
+
+    res.json({
+      message: 'Project slug migration completed',
+      scanned: projectsWithoutSlug.length,
+      updated: updatedCount
+    });
+  } catch (error) {
+    console.error('Error in migrateProjectSlugs:', error);
+    res.status(500).json({ error: 'Server error while migrating project slugs' });
   }
 };

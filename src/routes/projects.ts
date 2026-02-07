@@ -3,12 +3,14 @@ import { authenticateToken, requireAdmin } from '../middleware/auth';
 import { 
   getPublishedProjects, 
   getAllProjects, 
+  getProjectBySlug,
   getProjectById, 
   createProject, 
   updateProject, 
   deleteProject,
   createProjectWithImage,
-  updateProjectWithImage
+  updateProjectWithImage,
+  migrateProjectSlugs
 } from '../controllers/projectController';
 import multer from 'multer';
 
@@ -36,6 +38,12 @@ router.get('/', getPublishedProjects);
 
 // Specific route for 'all' to avoid conflict with :id parameter
 router.get('/all', authenticateToken, requireAdmin, getAllProjects); // Get all projects (including drafts) - requires auth
+
+// Specific route for slug-based lookup must come before :id
+router.get('/slug/:slug', getProjectBySlug); // Get published project by slug - public
+
+// One-time admin route to backfill project slugs
+router.post('/migrate-slugs', authenticateToken, requireAdmin, migrateProjectSlugs);
 
 // Route for specific project by ID - must come after /all to avoid conflict
 router.get('/:id', getProjectById); // Get specific project by ID - public
