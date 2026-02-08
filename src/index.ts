@@ -38,22 +38,26 @@ app.use(helmet())
 const determineAllowedOrigins = (): string[] => {
   // Check for NODE_ENV to determine environment
   const isProduction = process.env.NODE_ENV === 'production';
+  const defaultDevOrigins = ['http://localhost:3000', 'http://localhost:4000', 'http://localhost:8080'];
+
+  const configuredOrigins = process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',').map((origin: string) => origin.trim())
+    : [];
   
-  if (process.env.CORS_ORIGINS) {
-    // Split multiple origins if provided
-    return process.env.CORS_ORIGINS.split(',').map((origin: string) => origin.trim());
+  if (isProduction && configuredOrigins.length > 0) {
+    return configuredOrigins;
   } else if (isProduction && process.env.FRONTEND_URL_PROD) {
     // Production environment
     return [process.env.FRONTEND_URL_PROD];
   } else if (!isProduction && process.env.FRONTEND_URL_DEV) {
     // Development environment
-    return [process.env.FRONTEND_URL_DEV];
+    return Array.from(new Set([process.env.FRONTEND_URL_DEV, ...configuredOrigins, ...defaultDevOrigins]));
   } else if (process.env.FRONTEND_URL) {
     // Fallback to general FRONTEND_URL
-    return [process.env.FRONTEND_URL];
+    return Array.from(new Set([process.env.FRONTEND_URL, ...configuredOrigins, ...defaultDevOrigins]));
   } else {
     // Default fallback
-    return ['http://localhost:3000', 'http://localhost:8080'];
+    return Array.from(new Set([...configuredOrigins, ...defaultDevOrigins]));
   }
 };
 
