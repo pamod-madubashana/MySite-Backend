@@ -121,7 +121,7 @@ const sendContactEmails = async (params) => {
         messageExcerpt,
         '',
         'Best regards,',
-        'Pamod Support',
+        'Pamod',
     ].join('\n');
     await Promise.all([
         transporter.sendMail({
