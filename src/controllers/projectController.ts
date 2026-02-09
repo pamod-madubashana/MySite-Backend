@@ -1,8 +1,11 @@
 import { Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
+import mongoose from 'mongoose';
 import Project from '../models/Project';
 import { handleProjectImageUpload } from '../utils/imageUploadHandler';
 import { makeUniqueSlug, slugifyProjectTitle } from '../utils/slugify';
+
+const isValidProjectId = (projectId: string) => mongoose.isValidObjectId(projectId);
 
 const resolveUniqueProjectSlug = async (title: string, excludeProjectId?: string) => {
   const baseSlug = slugifyProjectTitle(title);
@@ -123,7 +126,13 @@ export const getAllProjects = async (req: Request, res: Response) => {
 
 export const getProjectById = async (req: Request, res: Response) => {
   try {
-    const project = await Project.findById(req.params.id);
+    const { id } = req.params;
+
+    if (!isValidProjectId(id)) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const project = await Project.findById(id);
     
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
@@ -610,11 +619,16 @@ export const updateProjectWithImage = [
       }
       
       const { title, description, tags, languages, githubUrl, liveUrl, featured, status } = req.body;
-      
+      const { id } = req.params;
+
+      if (!isValidProjectId(id)) {
+        return res.status(404).json({ error: 'Project not found' });
+      }
+
       const updateData: any = {};
       if (title !== undefined) {
         updateData.title = title;
-        updateData.slug = await resolveUniqueProjectSlug(title, req.params.id);
+        updateData.slug = await resolveUniqueProjectSlug(title, id);
       }
       if (description !== undefined) updateData.description = description;
       
@@ -654,7 +668,7 @@ export const updateProjectWithImage = [
       if (imageResults.screenshots !== undefined) updateData.screenshots = imageResults.screenshots;
       
       const project = await Project.findByIdAndUpdate(
-        req.params.id,
+        id,
         updateData,
         { new: true, runValidators: true }
       );
@@ -797,6 +811,12 @@ export const updateProject = [
   
   async (req: Request, res: Response) => {
     try {
+      const { id } = req.params;
+
+      if (!isValidProjectId(id)) {
+        return res.status(404).json({ error: 'Project not found' });
+      }
+
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
@@ -807,7 +827,7 @@ export const updateProject = [
       const updateData: any = {};
       if (title !== undefined) {
         updateData.title = title;
-        updateData.slug = await resolveUniqueProjectSlug(title, req.params.id);
+        updateData.slug = await resolveUniqueProjectSlug(title, id);
       }
       if (description !== undefined) updateData.description = description;
       if (tags !== undefined) updateData.tags = tags;
@@ -820,7 +840,7 @@ export const updateProject = [
       if (screenshots !== undefined) updateData.screenshots = screenshots;
       
       const project = await Project.findByIdAndUpdate(
-        req.params.id,
+        id,
         updateData,
         { new: true, runValidators: true }
       );
@@ -841,7 +861,13 @@ export const updateProject = [
 
 export const deleteProject = async (req: Request, res: Response) => {
   try {
-    const project = await Project.findByIdAndDelete(req.params.id);
+    const { id } = req.params;
+
+    if (!isValidProjectId(id)) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const project = await Project.findByIdAndDelete(id);
     
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
