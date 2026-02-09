@@ -45,7 +45,6 @@ const projectSchema = new mongoose_1.Schema({
         type: String,
         required: [true, 'Slug is required'],
         unique: true,
-        index: true,
         trim: true
     },
     description: {
@@ -112,6 +111,5 @@ const projectSchema = new mongoose_1.Schema({
 projectSchema.index({ title: 'text', description: 'text', tags: 'text', languages: 'text' });
 projectSchema.index({ featured: 1, createdAt: -1 });
 projectSchema.index({ status: 1, createdAt: -1 });
-projectSchema.index({ slug: 1 }, { unique: true });
 exports.default = mongoose_1.default.model('Project', projectSchema);
 //# sourceMappingURL=Project.js.map

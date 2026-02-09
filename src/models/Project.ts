@@ -27,7 +27,6 @@ const projectSchema = new Schema<IProject>({
     type: String,
     required: [true, 'Slug is required'],
     unique: true,
-    index: true,
     trim: true
   },
   description: {
@@ -93,6 +92,5 @@ const projectSchema = new Schema<IProject>({
 projectSchema.index({ title: 'text', description: 'text', tags: 'text', languages: 'text' })
 projectSchema.index({ featured: 1, createdAt: -1 })
 projectSchema.index({ status: 1, createdAt: -1 })
-projectSchema.index({ slug: 1 }, { unique: true })
 
 export default mongoose.model<IProject>('Project', projectSchema)
