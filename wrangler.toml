@@ -1,0 +1,8 @@
+name = "apipamoddev"
+main = "src/worker.ts"
+compatibility_date = "2026-06-03"
+compatibility_flags = ["nodejs_compat"]
+
+# This project is a backend API, not a static Cloudflare Pages site.
+# The previous `npx wrangler deploy` failed because Wrangler could not find
+# static assets and no Worker entrypoint was configured.
