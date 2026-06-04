@@ -18,6 +18,7 @@ import techStackCategoryRoutes from './routes/techStackCategories';
 import imageUploadRoutes from './routes/imageUpload';
 import contactRoutes from './routes/contact';
 import adminMessagesRoutes from './routes/adminMessages';
+import publicSiteDataRoutes from './routes/publicSiteData';
 
 dotenv.config()
 
@@ -114,6 +115,7 @@ app.use('/image-upload', imageUploadRoutes);
 app.use('/contact', contactRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/admin', adminMessagesRoutes);
+app.use('/api/public', publicSiteDataRoutes);
 
 
 app.get("/", (req, res) => {
