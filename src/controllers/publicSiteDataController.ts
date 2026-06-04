@@ -50,11 +50,55 @@ const getOrCreateSettings = async () => {
   return settings;
 };
 
+const getRepoKeyFromGithubUrl = (githubUrl: string | undefined): string | null => {
+  if (!githubUrl) {
+    return null;
+  }
+
+  const match = githubUrl.match(/github\.com\/([^/]+\/[^/?#]+)/i);
+  return match ? match[1].replace(/\.git$/i, '') : null;
+};
+
+const fetchProjectRepoStats = async (project: any) => {
+  const repoKey = getRepoKeyFromGithubUrl(project.githubUrl);
+
+  if (!repoKey) {
+    return null;
+  }
+
+  try {
+    const response = await axios.get<any>(`https://api.github.com/repos/${repoKey}`, {
+      headers: githubHeaders,
+    });
+
+    return {
+      projectId: String(project._id),
+      stats: {
+        stars: response.data?.stargazers_count ?? 0,
+        forks: response.data?.forks_count ?? 0,
+      },
+    };
+  } catch {
+    return null;
+  }
+};
+
 const fetchGithubData = async (settings: any, projects: any[]) => {
   const username = settings?.githubUsername;
+  const projectStatsResults = await Promise.all(projects.map(fetchProjectRepoStats));
+  const projectStats = projectStatsResults.reduce<Record<string, { stars: number; forks: number }>>((stats, result) => {
+    if (result) {
+      stats[result.projectId] = result.stats;
+    }
+
+    return stats;
+  }, {});
 
   if (!username) {
-    return fallbackBySection.github;
+    return {
+      repos: [],
+      projectStats,
+    };
   }
 
   const response = await axios.get<any[]>(`https://api.github.com/users/${username}/repos`, {
@@ -95,22 +139,14 @@ const fetchGithubData = async (settings: any, projects: any[]) => {
     }])
   );
 
-  const projectStats = projects.reduce<Record<string, { stars: number; forks: number }>>((stats, project) => {
-    const githubUrl = project.githubUrl;
+  projects.forEach((project) => {
+    const repoKey = getRepoKeyFromGithubUrl(project.githubUrl);
+    const repoStats = repoKey ? statsByFullName.get(repoKey.toLowerCase()) : undefined;
 
-    if (!githubUrl) {
-      return stats;
+    if (repoStats && !projectStats[String(project._id)]) {
+      projectStats[String(project._id)] = repoStats;
     }
-
-    const match = githubUrl.match(/github\.com\/([^/]+\/[^/?#]+)/i);
-    const repoStats = match ? statsByFullName.get(match[1].toLowerCase()) : undefined;
-
-    if (repoStats) {
-      stats[String(project._id)] = repoStats;
-    }
-
-    return stats;
-  }, {});
+  });
 
   return {
     repos,
