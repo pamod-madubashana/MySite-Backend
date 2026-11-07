@@ -26,3 +26,14 @@
 ## 🌟 Projects
 
 Check out my latest work on [pamod.is-a.dev/projects](https://pamod.is-a.dev/projects)
+
+## Development
+
+```bash
+npm install
+cp .env.example .env   # then fill in values
+npm run dev            # nodemon dev server
+npm run build          # compile TypeScript
+npm run start          # run the compiled server
+npm run lint           # ESLint
+```
